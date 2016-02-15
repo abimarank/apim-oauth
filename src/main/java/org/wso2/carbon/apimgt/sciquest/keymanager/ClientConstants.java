@@ -28,7 +28,6 @@ public final class ClientConstants {
     public static final String UTF_8 = "UTF-8";
     public static final String CLIENT_SECRET = "secret";
 
-    public static final String REGISTRAION_ACCESS_TOKEN = "AccessToken";
     public static final String CLIENT_ID = "clientId";
 
     public static final String AUTHORIZATION = "Authorization";

@@ -102,7 +102,6 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
         // Getting Client Registration Url and Access Token from Config.
         String registrationEndpoint = config.getParameter(ClientConstants.CLIENT_REG_ENDPOINT);
-        String registrationToken = config.getParameter(ClientConstants.REGISTRAION_ACCESS_TOKEN);
 
         HttpPut httpPut = new HttpPut(registrationEndpoint.trim());
         //HttpPost httpPost = new HttpPost(registrationEndpoint.trim());
@@ -190,7 +189,6 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
         }
 
         String registrationUrl = configuration.getParameter(ClientConstants.CLIENT_REG_ENDPOINT);
-        String accessToken = configuration.getParameter(ClientConstants.REGISTRAION_ACCESS_TOKEN);
         BufferedReader reader = null;
         oauthAppRequest.getOAuthApplicationInfo().addParameter("id", id);
 
@@ -264,7 +262,6 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
         Long id = nameIdMapping.get(consumerKey);
 
         String configURL = configuration.getParameter(ClientConstants.CLIENT_REG_ENDPOINT);
-        String configURLsAccessToken = configuration.getParameter(ClientConstants.REGISTRAION_ACCESS_TOKEN);
         HttpClient client = getHttpClient();
 
         try {
@@ -317,7 +314,6 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
         // First get the Id corresponding to consumerKey
         Long id = nameIdMapping.get(consumerKey);
         String registrationURL = configuration.getParameter(ClientConstants.CLIENT_REG_ENDPOINT);
-        String accessToken = configuration.getParameter(ClientConstants.REGISTRAION_ACCESS_TOKEN);
         BufferedReader reader = null;
 
         try {
