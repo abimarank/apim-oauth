@@ -80,7 +80,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
      *
      * @param configuration Configuration as a {@link org.wso2.carbon.apimgt.api.model.KeyManagerConfiguration}
      */
-    @Override
+
     public void loadConfiguration(KeyManagerConfiguration configuration) throws APIManagementException {
 
         this.configuration = configuration;
@@ -91,7 +91,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
      *
      * @param oauthAppRequest this object holds all parameters required to register an OAuth Client.
      */
-    @Override
+
     public OAuthApplicationInfo createApplication(OAuthAppRequest oauthAppRequest) throws APIManagementException {
 
         OAuthApplicationInfo oAuthApplicationInfo = oauthAppRequest.getOAuthApplicationInfo();
@@ -174,7 +174,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
      * @return Details of updated OAuth Client.
      * @throws APIManagementException
      */
-    @Override
+
     public OAuthApplicationInfo updateApplication(OAuthAppRequest oauthAppRequest) throws APIManagementException {
 
         log.info("Updating OAuth Client..");
@@ -254,7 +254,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
      * @param consumerKey consumer key of the OAuth Client.
      * @throws APIManagementException
      */
-    @Override
+
     public void deleteApplication(String consumerKey) throws APIManagementException {
 
         log.info("Creating a new OAuth Client in Authorization Server..");
@@ -306,7 +306,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
      * @return an {@code OAuthApplicationInfo} having all the details of an OAuth Client.
      * @throws APIManagementException
      */
-    @Override
+
     public OAuthApplicationInfo retrieveApplication(String consumerKey) throws APIManagementException {
 
         HttpClient client = getHttpClient();
@@ -387,13 +387,13 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
         return null;
     }
 
-    @Override
+
     public AccessTokenInfo getNewApplicationAccessToken(AccessTokenRequest tokenRequest) throws APIManagementException {
 
         return null;
     }
 
-    @Override
+
     public AccessTokenInfo getTokenMetaData(String accessToken) throws APIManagementException {
         AccessTokenInfo tokenInfo = new AccessTokenInfo();
 
@@ -506,12 +506,12 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
         return tokenInfo;
     }
 
-    @Override
+
     public KeyManagerConfiguration getKeyManagerConfiguration() throws APIManagementException {
         return configuration;
     }
 
-    @Override
+
     public OAuthApplicationInfo buildFromJSON(String jsonInput) throws APIManagementException {
         return null;
     }
@@ -523,7 +523,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
      * @return {@code OAuthApplicationInfo} with the details of the mapped client.
      * @throws APIManagementException
      */
-    @Override
+
     public OAuthApplicationInfo mapOAuthApplication(OAuthAppRequest appInfoRequest)
             throws APIManagementException {
 
@@ -531,37 +531,37 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
         return oAuthApplicationInfo;
     }
 
-    @Override
+
     public boolean registerNewResource(API api, Map resourceAttributes) throws APIManagementException {
         return true;
     }
 
-    @Override
+
     public Map getResourceByApiId(String apiId) throws APIManagementException {
         return null;
     }
 
-    @Override
+
     public boolean updateRegisteredResource(API api, Map resourceAttributes) throws APIManagementException {
         return true;
     }
 
-    @Override
+
     public void deleteRegisteredResourceByAPIId(String apiID) throws APIManagementException {
 
     }
 
-    @Override
+
     public void deleteMappedApplication(String s) throws APIManagementException {
 
     }
 
-    @Override
+
     public Set<String> getActiveTokensByConsumerKey(String s) throws APIManagementException {
         return null;
     }
 
-    @Override
+
     public AccessTokenInfo getAccessTokenByConsumerKey(String s) throws APIManagementException {
         return null;
     }
