@@ -119,8 +119,12 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
             httpPut.setEntity(new StringEntity(jsonPayload, ClientConstants.UTF_8));
             httpPut.setHeader(ClientConstants.CONTENT_TYPE, ClientConstants.APPLICATION_JSON_CONTENT_TYPE);
 
-            // Setting Authorization Header, with Access Token
-            httpPut.setHeader(ClientConstants.AUTHORIZATION, ClientConstants.BEARER + registrationToken);
+            String introspectionConsumerKey = config.getParameter(ClientConstants.INTROSPECTION_CK);
+            String introspectionConsumerSecret = config.getParameter(ClientConstants.INTROSPECTION_CS);
+            String encodedSecret = Base64.encode(new String(introspectionConsumerKey + ":" + introspectionConsumerSecret)
+                                                         .getBytes());
+
+            httpPut.setHeader(ClientConstants.AUTHORIZATION, ClientConstants.BASIC + encodedSecret);
 
             HttpResponse response = httpClient.execute(httpPut);
             int responseCode = response.getStatusLine().getStatusCode();
@@ -201,7 +205,12 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
             HttpPost httpPost = new HttpPost(registrationUrl);
             httpPost.setEntity(new StringEntity(jsonPayload, "UTF8"));
             httpPost.setHeader(ClientConstants.CONTENT_TYPE, ClientConstants.APPLICATION_JSON_CONTENT_TYPE);
-            httpPost.setHeader(ClientConstants.AUTHORIZATION, ClientConstants.BEARER + accessToken);
+            String introspectionConsumerKey = configuration.getParameter(ClientConstants.INTROSPECTION_CK);
+            String introspectionConsumerSecret = configuration.getParameter(ClientConstants.INTROSPECTION_CS);
+            String encodedSecret = Base64.encode(new String(introspectionConsumerKey + ":" + introspectionConsumerSecret)
+                                                         .getBytes());
+
+            httpPost.setHeader(ClientConstants.AUTHORIZATION, ClientConstants.BASIC + encodedSecret);
             HttpResponse response = client.execute(httpPost);
 
             int responseCode = response.getStatusLine().getStatusCode();
@@ -266,7 +275,12 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
                 HttpDelete httpDelete = new HttpDelete(configURL);
 
                 // Set Authorization Header
-                httpDelete.addHeader(ClientConstants.AUTHORIZATION, ClientConstants.BEARER + configURLsAccessToken);
+                String introspectionConsumerKey = configuration.getParameter(ClientConstants.INTROSPECTION_CK);
+                String introspectionConsumerSecret = configuration.getParameter(ClientConstants.INTROSPECTION_CS);
+                String encodedSecret = Base64.encode(new String(introspectionConsumerKey + ":" + introspectionConsumerSecret)
+                                                             .getBytes());
+
+                httpDelete.setHeader(ClientConstants.AUTHORIZATION, ClientConstants.BASIC + encodedSecret);
                 HttpResponse response = client.execute(httpDelete);
                 int responseCode = response.getStatusLine().getStatusCode();
                 //if (log.isDebugEnabled()) {
@@ -317,7 +331,12 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
             HttpGet request = new HttpGet(registrationURL);
             //set authorization header.
-            request.addHeader(ClientConstants.AUTHORIZATION, ClientConstants.BEARER + accessToken);
+            String introspectionConsumerKey = configuration.getParameter(ClientConstants.INTROSPECTION_CK);
+            String introspectionConsumerSecret = configuration.getParameter(ClientConstants.INTROSPECTION_CS);
+            String encodedSecret = Base64.encode(new String(introspectionConsumerKey + ":" + introspectionConsumerSecret)
+                                                         .getBytes());
+
+            request.setHeader(ClientConstants.AUTHORIZATION, ClientConstants.BASIC + encodedSecret);
             HttpResponse response = client.execute(request);
 
             int responseCode = response.getStatusLine().getStatusCode();
