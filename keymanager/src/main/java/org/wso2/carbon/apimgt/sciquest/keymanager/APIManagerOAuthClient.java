@@ -29,12 +29,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -57,7 +53,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -68,10 +63,6 @@ import java.util.Set;
 public class APIManagerOAuthClient extends AbstractKeyManager {
 
     private static final Log log = LogFactory.getLog(APIManagerOAuthClient.class);
-
-    // We need to maintain a mapping between Consumer Key and id. To get details of a specific client,
-    // we need to call client registration endpoint using id.
-    Map<String, Long> nameIdMapping = new HashMap<String, Long>();
 
     private KeyManagerConfiguration configuration;
 
@@ -94,75 +85,8 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
     public OAuthApplicationInfo createApplication(OAuthAppRequest oauthAppRequest) throws APIManagementException {
 
-        OAuthApplicationInfo oAuthApplicationInfo = oauthAppRequest.getOAuthApplicationInfo();
+        log.warn("The Operation [Create OAuth Application] is not supported by the OAuth 2 Server");
 
-        log.info("Creating a new oAuthApp in Authorization Server");
-
-        KeyManagerConfiguration config = KeyManagerHolder.getKeyManagerInstance().getKeyManagerConfiguration();
-
-        // Getting Client Registration Url and Access Token from Config.
-        String registrationEndpoint = config.getParameter(ClientConstants.CLIENT_REG_ENDPOINT);
-
-        HttpPut httpPut = new HttpPut(registrationEndpoint.trim());
-        //HttpPost httpPost = new HttpPost(registrationEndpoint.trim());
-
-        HttpClient httpClient = getHttpClient();
-
-        BufferedReader reader = null;
-        try {
-            //Create the JSON Payload that should be sent to OAuth Server.
-            String jsonPayload = createJsonPayloadFromOauthApplication(oAuthApplicationInfo);
-
-            log.info("Payload for creating new client : " + jsonPayload);
-
-            httpPut.setEntity(new StringEntity(jsonPayload, ClientConstants.UTF_8));
-            httpPut.setHeader(ClientConstants.CONTENT_TYPE, ClientConstants.APPLICATION_JSON_CONTENT_TYPE);
-
-            String introspectionConsumerKey = config.getParameter(ClientConstants.INTROSPECTION_CK);
-            String introspectionConsumerSecret = config.getParameter(ClientConstants.INTROSPECTION_CS);
-            String encodedSecret = Base64.encode(new String(introspectionConsumerKey + ":" + introspectionConsumerSecret)
-                                                         .getBytes());
-
-            httpPut.setHeader(ClientConstants.AUTHORIZATION, ClientConstants.BASIC + encodedSecret);
-
-            HttpResponse response = httpClient.execute(httpPut);
-            int responseCode = response.getStatusLine().getStatusCode();
-
-            log.info("Response Code Received from client registration endpoint : " + responseCode);
-
-            HttpEntity entity = response.getEntity();
-            reader = new BufferedReader(new InputStreamReader(entity.getContent(), ClientConstants.UTF_8));
-
-            if (HttpStatus.SC_CREATED == responseCode) {
-
-                JSONObject parsedObject = getParsedObjectByReader(reader);
-                if (parsedObject != null) {
-                    oAuthApplicationInfo = createOAuthAppfromResponse(parsedObject);
-
-                    // We need the id when retrieving a single OAuth Client. So we have to maintain a mapping
-                    // between the consumer key and the ID.
-                    nameIdMapping.put(oAuthApplicationInfo.getClientId(), (Long) oAuthApplicationInfo.getParameter("id"));
-
-                    return oAuthApplicationInfo;
-                }
-            } else {
-                handleException("Some thing wrong here while registering the new client " +
-                                "HTTP Error response code is " + responseCode);
-            }
-
-        } catch (UnsupportedEncodingException e) {
-            handleException("Encoding for the Response not-supported.", e);
-        } catch (ParseException e) {
-            handleException("Error while parsing response json", e);
-        } catch (IOException e) {
-            handleException("Error while reading response body ", e);
-        } finally {
-            //close buffer reader.
-            if (reader != null) {
-                IOUtils.closeQuietly(reader);
-            }
-            httpClient.getConnectionManager().shutdown();
-        }
         return null;
     }
 
@@ -177,74 +101,8 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
     public OAuthApplicationInfo updateApplication(OAuthAppRequest oauthAppRequest) throws APIManagementException {
 
-        log.info("Updating OAuth Client..");
+       log.warn("The Operation [Update OAuth Application] is not supported by the OAuth 2 Server");
 
-        // We have to send the id with the update request.
-        String consumerKey = oauthAppRequest.getOAuthApplicationInfo().getClientId();
-
-        Long id = nameIdMapping.get(consumerKey);
-
-        if (id == null) {
-            return oauthAppRequest.getOAuthApplicationInfo();
-        }
-
-        String registrationUrl = configuration.getParameter(ClientConstants.CLIENT_REG_ENDPOINT);
-        BufferedReader reader = null;
-        oauthAppRequest.getOAuthApplicationInfo().addParameter("id", id);
-
-        registrationUrl += "/" + id.toString();
-
-        HttpClient client = getHttpClient();
-        try {
-            String jsonPayload = createJsonPayloadFromOauthApplication(oauthAppRequest.getOAuthApplicationInfo());
-
-            log.info("JSON Payload for update method : " + jsonPayload);
-
-            HttpPost httpPost = new HttpPost(registrationUrl);
-            httpPost.setEntity(new StringEntity(jsonPayload, "UTF8"));
-            httpPost.setHeader(ClientConstants.CONTENT_TYPE, ClientConstants.APPLICATION_JSON_CONTENT_TYPE);
-            String introspectionConsumerKey = configuration.getParameter(ClientConstants.INTROSPECTION_CK);
-            String introspectionConsumerSecret = configuration.getParameter(ClientConstants.INTROSPECTION_CS);
-            String encodedSecret = Base64.encode(new String(introspectionConsumerKey + ":" + introspectionConsumerSecret)
-                                                         .getBytes());
-
-            httpPost.setHeader(ClientConstants.AUTHORIZATION, ClientConstants.BASIC + encodedSecret);
-            HttpResponse response = client.execute(httpPost);
-
-            int responseCode = response.getStatusLine().getStatusCode();
-
-            log.info("Response Code from Server: " + responseCode);
-
-            JSONObject parsedObject;
-
-            HttpEntity entity = response.getEntity();
-            reader = new BufferedReader(new InputStreamReader(entity.getContent(), ClientConstants.UTF_8));
-
-            if (responseCode == HttpStatus.SC_CREATED || responseCode == HttpStatus.SC_OK) {
-                parsedObject = getParsedObjectByReader(reader);
-                if (parsedObject != null) {
-                    return createOAuthAppfromResponse(parsedObject);
-                } else {
-                    handleException("ParseObject is empty. Can not return oAuthApplicationInfo.");
-                }
-            } else {
-                handleException("Some thing wrong here when updating the Client for key." + oauthAppRequest
-                        .getOAuthApplicationInfo().getClientId() + ". Error " + "code" + responseCode);
-            }
-
-        } catch (UnsupportedEncodingException e) {
-            handleException("Some thing wrong here when Updating a Client for key " + oauthAppRequest
-                    .getOAuthApplicationInfo().getClientId(), e);
-        } catch (ParseException e) {
-            handleException("Error while parsing response json", e);
-        } catch (IOException e) {
-            handleException("Error while reading response body from Server ", e);
-        } finally {
-            if (reader != null) {
-                IOUtils.closeQuietly(reader);
-            }
-            client.getConnectionManager().shutdown();
-        }
         return null;
     }
 
@@ -256,47 +114,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
      */
 
     public void deleteApplication(String consumerKey) throws APIManagementException {
-
-        log.info("Creating a new OAuth Client in Authorization Server..");
-
-        Long id = nameIdMapping.get(consumerKey);
-
-        String configURL = configuration.getParameter(ClientConstants.CLIENT_REG_ENDPOINT);
-        HttpClient client = getHttpClient();
-
-        try {
-
-            // Deletion has to be called providing the ID. If we don't have the ID we can't proceed with Delete.
-            if (id != null) {
-                configURL += "/" + id.toString();
-                HttpDelete httpDelete = new HttpDelete(configURL);
-
-                // Set Authorization Header
-                String introspectionConsumerKey = configuration.getParameter(ClientConstants.INTROSPECTION_CK);
-                String introspectionConsumerSecret = configuration.getParameter(ClientConstants.INTROSPECTION_CS);
-                String encodedSecret = Base64.encode(new String(introspectionConsumerKey + ":" + introspectionConsumerSecret)
-                                                             .getBytes());
-
-                httpDelete.setHeader(ClientConstants.AUTHORIZATION, ClientConstants.BASIC + encodedSecret);
-                HttpResponse response = client.execute(httpDelete);
-                int responseCode = response.getStatusLine().getStatusCode();
-                //if (log.isDebugEnabled()) {
-                    log.info("Delete application response code :  " + responseCode);
-               // }
-                if (responseCode == HttpStatus.SC_OK ||
-                    responseCode == HttpStatus.SC_NO_CONTENT) {
-                    log.info("OAuth Client for consumer Id " + consumerKey + " has been successfully deleted");
-                    nameIdMapping.remove(consumerKey);
-                } else {
-                    handleException("Problem occurred while deleting client for Consumer Key " + consumerKey);
-                }
-            }
-
-        } catch (IOException e) {
-            handleException("Error while reading response body from Server ", e);
-        } finally {
-            client.getConnectionManager().shutdown();
-        }
+        log.warn("The Operation [Delete OAuth Application] is not supported by the OAuth 2 Server");
     }
 
     /**
@@ -309,75 +127,17 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
     public OAuthApplicationInfo retrieveApplication(String consumerKey) throws APIManagementException {
 
-        HttpClient client = getHttpClient();
-
-        // First get the Id corresponding to consumerKey
-        Long id = nameIdMapping.get(consumerKey);
-        String registrationURL = configuration.getParameter(ClientConstants.CLIENT_REG_ENDPOINT);
-        BufferedReader reader = null;
-
-        try {
-
-            if (id != null) {
-                // To get the specific client, we have to call like
-                // http://192.168.52.5:8080/admin/resourceServer/251/client/355
-                log.info("Found id : " + id.toString() + " for consumer key :" + consumerKey);
-                registrationURL += "/" + id.toString();
-            }
-
-            HttpGet request = new HttpGet(registrationURL);
-            //set authorization header.
-            String introspectionConsumerKey = configuration.getParameter(ClientConstants.INTROSPECTION_CK);
-            String introspectionConsumerSecret = configuration.getParameter(ClientConstants.INTROSPECTION_CS);
-            String encodedSecret = Base64.encode(new String(introspectionConsumerKey + ":" + introspectionConsumerSecret)
-                                                         .getBytes());
-
-            request.setHeader(ClientConstants.AUTHORIZATION, ClientConstants.BASIC + encodedSecret);
-            HttpResponse response = client.execute(request);
-
-            int responseCode = response.getStatusLine().getStatusCode();
-            Object parsedObject;
-
-            HttpEntity entity = response.getEntity();
-
-            reader = new BufferedReader(new InputStreamReader(entity.getContent(), "UTF-8"));
-
-            if (responseCode == HttpStatus.SC_CREATED || responseCode == HttpStatus.SC_OK) {
-                JSONParser parser = new JSONParser();
-                if (reader != null) {
-                    parsedObject = parser.parse(reader);
-
-                    // If we have appended the ID, then the response is a JSONObject if not the response is a JSONArray.
-                    if (parsedObject instanceof JSONArray) {
-                        // If the response is a JSONArray, then we prime the nameId map,
-                        // with the response received. And then return details of the specific client.
-                        addToNameIdMap((JSONArray) parsedObject);
-                        for (Object object : (JSONArray) parsedObject) {
-                            JSONObject jsonObject = (JSONObject) object;
-                            if ((jsonObject.get(ClientConstants.CLIENT_ID)).equals
-                                    (consumerKey)) {
-                                return createOAuthAppfromResponse(jsonObject);
-                            }
-                        }
-                    } else {
-                        return createOAuthAppfromResponse((JSONObject) parsedObject);
-                    }
-                }
-
-            } else {
-                handleException("Something went wrong while retrieving client for consumer key " + consumerKey);
-            }
-
-        } catch (ParseException e) {
-            handleException("Error while parsing response json.", e);
-        } catch (IOException e) {
-            handleException("Error while reading response body.", e);
-        } finally {
-            client.getConnectionManager().shutdown();
-            IOUtils.closeQuietly(reader);
+        if (log.isDebugEnabled())   {
+            log.debug("The Operation [Retrieve OAuth Application details] is not supported by the OAuth 2 Server");
         }
 
-        return null;
+        // NO Client Registration URL provided to query,
+
+        OAuthApplicationInfo info = new OAuthApplicationInfo();
+        info.setClientId(consumerKey);
+
+        return info;
+
     }
 
     @Override
@@ -419,10 +179,33 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
             HttpResponse response = client.execute(httpGet);
             int responseCode = response.getStatusLine().getStatusCode();
 
-            log.info("HTTP Response code : " + responseCode);
+            if (log.isDebugEnabled())   {
+                log.debug("HTTP Response code : " + responseCode);
+            }
 
-            // {"audience":"MappedClient","scopes":["test"],"principal":{"name":"mappedclient","roles":[],"groups":[],"adminPrincipal":false,
-            // "attributes":{}},"expires_in":1433059160531}
+            // Response Format from OAuth 2 Server
+
+            /*{
+                "audience":"MappedClient",
+                    "scopes":[
+                        "test"
+                    ],
+                    "principal":{
+                        "name":"mappedclient",
+                        "roles":[
+
+                        ],
+                        "groups":[
+
+                        ],
+                        "adminPrincipal":false,
+                        "attributes":{
+
+                        }
+                    },
+                    "expires_in":1433059160531
+            }*/
+
             HttpEntity entity = response.getEntity();
             JSONObject parsedObject;
             reader = new BufferedReader(new InputStreamReader(entity.getContent(), "UTF-8"));
@@ -491,8 +274,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
         } catch (UnsupportedEncodingException e) {
             handleException("The Character Encoding is not supported. " + e.getMessage(), e);
         } catch (ClientProtocolException e) {
-            handleException("HTTP request error has occurred while sending request  to OAuth Provider. " +
-                            e.getMessage(), e);
+            handleException("HTTP request error has occurred while sending request  to OAuth Provider. " + e.getMessage(), e);
         } catch (IOException e) {
             handleException("Error has occurred while reading or closing buffer reader. " + e.getMessage(), e);
         } catch (URISyntaxException e) {
@@ -566,45 +348,6 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
         return null;
     }
 
-    /**
-     * This method can be used to create a JSON Payload out of the Parameters defined in an OAuth Application.
-     *
-     * @param oAuthApplicationInfo Object that needs to be converted.
-     * @return
-     */
-    private String createJsonPayloadFromOauthApplication(OAuthApplicationInfo oAuthApplicationInfo)
-            throws APIManagementException {
-
-        Map<String, Object> paramMap = new HashMap<String, Object>();
-
-        if (oAuthApplicationInfo.getClientName() == null ||
-            oAuthApplicationInfo.getParameter(ClientConstants.CLIENT_CONTACT_NAME) == null ||
-            oAuthApplicationInfo.getParameter(ClientConstants.CLIENT_SCOPE) == null ||
-            oAuthApplicationInfo.getParameter(ClientConstants.CLIENT_CONTAT_EMAIL) == null) {
-            throw new APIManagementException("Mandatory parameters missing");
-        }
-
-        // Format of the request needed.
-        // {"name":"TestClient_1","scopes":["scope1"],
-        // "contactName":"John Doe",
-        // "contactEmail":"john@doe.com"}
-
-        paramMap.put(ClientConstants.CLIENT_NAME, oAuthApplicationInfo.getClientName());
-
-        JSONArray scopes = (JSONArray) oAuthApplicationInfo.getParameter(ClientConstants.CLIENT_SCOPE);
-        paramMap.put("scopes", scopes);
-
-        paramMap.put(ClientConstants.CLIENT_CONTACT_NAME, oAuthApplicationInfo.getParameter(ClientConstants
-                                                                                                        .CLIENT_CONTACT_NAME));
-        paramMap.put(ClientConstants.CLIENT_CONTAT_EMAIL, oAuthApplicationInfo.getParameter(ClientConstants
-                                                                                                        .CLIENT_CONTAT_EMAIL));
-        if (oAuthApplicationInfo.getParameter("id") != null) {
-            paramMap.put("id", oAuthApplicationInfo.getParameter("id"));
-        }
-
-        return JSONObject.toJSONString(paramMap);
-    }
-
 
     /**
      * Can be used to parse {@code BufferedReader} object that are taken from response stream, to a {@code JSONObject}.
@@ -634,79 +377,4 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
         throw new APIManagementException(msg, e);
     }
 
-    /**
-     * common method to throw exceptions. This will only expect one parameter.
-     *
-     * @param msg error message as a string.
-     * @throws APIManagementException
-     */
-    private void handleException(String msg) throws APIManagementException {
-        log.error(msg);
-        throw new APIManagementException(msg);
-    }
-
-    /**
-     * This method will create {@code OAuthApplicationInfo} object from a Map of Attributes.
-     *
-     * @param responseMap Response returned from server as a Map
-     * @return OAuthApplicationInfo object will return.
-     */
-    private OAuthApplicationInfo createOAuthAppfromResponse(Map responseMap) {
-
-
-        // Sample response returned by client registration endpoint.
-        // {"id":305,"creationDate":1430486098086,"modificationDate":1430486098086,"name":"TestClient_2",
-        // "clientId":"testclient_2","secret":"3b4dbfb6-0ad9-403e-8ed6-715459fc8c78",
-        // "description":null,"contactName":"John Doe","contactEmail":"john@doe.com",
-        // "scopes":["scope1"],"attributes":{},"thumbNailUrl":null,"redirectUris":[],
-        // "skipConsent":false,"includePrincipal":false,"expireDuration":0,"useRefreshTokens":false,
-        // "allowedImplicitGrant":false,"allowedClientCredentials":false}
-
-        OAuthApplicationInfo info = new OAuthApplicationInfo();
-        Object clientId = responseMap.get(ClientConstants.CLIENT_ID);
-        info.setClientId((String) clientId);
-
-        Object clientSecret = responseMap.get(ClientConstants.CLIENT_SECRET);
-        info.setClientSecret((String) clientSecret);
-
-        Object id = responseMap.get("id");
-        info.addParameter("id", id);
-
-        Object contactName = responseMap.get(ClientConstants.CLIENT_CONTACT_NAME);
-        if (contactName != null) {
-            info.addParameter("contactName", contactName);
-        }
-
-        Object contactMail = responseMap.get(ClientConstants.CLIENT_CONTAT_EMAIL);
-        if (contactMail != null) {
-            info.addParameter("contactMail", contactMail);
-        }
-
-        Object scopes = responseMap.get(ClientConstants.SCOPES);
-        if (scopes != null) {
-            info.addParameter("scopes", scopes);
-        }
-
-        return info;
-    }
-
-    /**
-     * This method will return HttpClient object.
-     *
-     * @return HttpClient object.
-     */
-    private HttpClient getHttpClient() {
-        HttpClient httpClient = new DefaultHttpClient();
-        return httpClient;
-    }
-
-    private void addToNameIdMap(JSONArray clientArray) {
-        for (Object jsonObject : clientArray) {
-            if (jsonObject instanceof JSONObject) {
-                Long id = (Long) ((JSONObject) jsonObject).get("id");
-                String consumerId = (String) ((JSONObject) jsonObject).get(ClientConstants.CLIENT_ID);
-                nameIdMapping.put(consumerId, id);
-            }
-        }
-    }
 }
