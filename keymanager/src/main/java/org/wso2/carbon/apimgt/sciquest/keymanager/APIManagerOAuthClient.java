@@ -145,6 +145,10 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
     public AccessTokenInfo getNewApplicationAccessToken(AccessTokenRequest tokenRequest) throws APIManagementException {
 
+        if (tokenRequest == null)   {
+            return null;
+        }
+
         log.info("Calling OAuth Server for generating Access Token");
 
         KeyManagerConfiguration config = KeyManagerHolder.getKeyManagerInstance().getKeyManagerConfiguration();
@@ -191,6 +195,14 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
         return null;
     }
+
+    @Override
+    public AccessTokenRequest buildAccessTokenRequestFromOAuthApp(OAuthApplicationInfo oAuthApplication,
+                                                                  AccessTokenRequest tokenRequest)
+            throws APIManagementException {
+        return null;
+    }
+
 
 
     public AccessTokenInfo getTokenMetaData(String accessToken) throws APIManagementException {
