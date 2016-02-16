@@ -441,7 +441,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
         AccessTokenInfo tokenInfo = new AccessTokenInfo();
         tokenInfo.setAccessToken((String)map.get("access_token"));
-        tokenInfo.setValidityPeriod(Long.valueOf((String)map.get("expires_in")));
+        tokenInfo.setValidityPeriod((Long) map.get("expires_in"));
         tokenInfo.setScope(new String[]{(String)map.get("scope")});
         return tokenInfo;
 

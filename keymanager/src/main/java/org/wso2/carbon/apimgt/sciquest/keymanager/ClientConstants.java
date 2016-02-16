@@ -25,7 +25,7 @@ public final class ClientConstants {
 
 
     public static final String AUTHORIZATION = "Authorization";
-    public static final String BASIC = "Basic";
+    public static final String BASIC = "Basic "; // Keep the space at the end
     public static final String APPLICATION_JSON_CONTENT_TYPE = "application/json";
     public static final String CONTENT_TYPE = "Content-Type";
     public static final String ACCEPT = "Accpet";
