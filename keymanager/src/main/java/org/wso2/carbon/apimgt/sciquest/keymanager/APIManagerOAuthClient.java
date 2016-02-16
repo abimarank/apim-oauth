@@ -30,7 +30,9 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -140,15 +142,52 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
     }
 
-    @Override
-    public AccessTokenRequest buildAccessTokenRequestFromOAuthApp(OAuthApplicationInfo oAuthApplication,
-                                                                  AccessTokenRequest tokenRequest)
-            throws APIManagementException {
-        return null;
-    }
-
 
     public AccessTokenInfo getNewApplicationAccessToken(AccessTokenRequest tokenRequest) throws APIManagementException {
+
+        log.info("Calling OAuth Server for generating Access Token");
+
+        KeyManagerConfiguration config = KeyManagerHolder.getKeyManagerInstance().getKeyManagerConfiguration();
+
+        String tokenEndpoint = config.getParameter(ClientConstants.TOKEN_URL);
+
+        HttpPost httpPost = new HttpPost(tokenEndpoint.trim());
+
+        HttpClient httpClient = new DefaultHttpClient();
+
+        try {
+            String jsonPayload = "grant_type=client_credentials";
+
+            httpPost.setEntity(new StringEntity(jsonPayload, ClientConstants.UTF_8));
+            httpPost.setHeader(ClientConstants.CONTENT_TYPE, ClientConstants.URL_ENCODED_CONTENT_TYPE);
+            httpPost.setHeader(ClientConstants.ACCEPT, ClientConstants.APPLICATION_JSON_CONTENT_TYPE);
+
+            String encodedSecret =
+                    Base64.encode(new String(tokenRequest.getClientId() + ":" + tokenRequest.getClientSecret()).getBytes());
+
+            httpPost.setHeader(ClientConstants.AUTHORIZATION, ClientConstants.BASIC + encodedSecret);
+
+            HttpResponse response = httpClient.execute(httpPost);
+            int responseCode = response.getStatusLine().getStatusCode();
+
+            if (HttpStatus.SC_OK == responseCode) {
+                HttpEntity entity = response.getEntity();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(entity.getContent(), ClientConstants.UTF_8));
+                JSONObject parsedObject = getParsedObjectByReader(reader);
+
+                return getAccessTokenFromResponse(parsedObject);
+            } else {
+                handleException("Some thing wrong here while retrieving new token " +
+                                "HTTP Error response code is " + responseCode);
+            }
+
+        } catch (ClientProtocolException e) {
+            handleException("HTTP request error has occurred while sending request  to OAuth Provider. " + e.getMessage(), e);
+        } catch (IOException e) {
+            handleException("Error has occurred while reading or closing buffer reader. " + e.getMessage(), e);
+        } catch (ParseException e)  {
+            handleException("Error while parsing response json " + e.getMessage(), e);
+        }
 
         return null;
     }
@@ -309,6 +348,8 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
     public OAuthApplicationInfo mapOAuthApplication(OAuthAppRequest appInfoRequest)
             throws APIManagementException {
 
+        log.info("Client OAuth application creation not supported in OAuth Server");
+
         OAuthApplicationInfo oAuthApplicationInfo = appInfoRequest.getOAuthApplicationInfo();
         return oAuthApplicationInfo;
     }
@@ -376,5 +417,23 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
         log.error(msg, e);
         throw new APIManagementException(msg, e);
     }
+
+    private void handleException(String msg) throws APIManagementException {
+        log.error(msg);
+        throw new APIManagementException(msg);
+    }
+
+    private AccessTokenInfo getAccessTokenFromResponse(JSONObject map)  {
+
+        //{"scope":"test","access_token":"b32875ac-bf5d-40c4-838d-a1c69b13479c","token_type":"bearer","expires_in":3600}
+
+        AccessTokenInfo tokenInfo = new AccessTokenInfo();
+        tokenInfo.setAccessToken((String)map.get("access_token"));
+        tokenInfo.setValidityPeriod(Long.valueOf((String)map.get("expires_in")));
+        tokenInfo.setScope(new String[]{(String)map.get("scope")});
+        return tokenInfo;
+
+    }
+
 
 }
