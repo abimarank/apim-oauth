@@ -15,8 +15,10 @@ import org.wso2.carbon.apimgt.impl.workflow.WorkflowStatus;
 import java.util.List;
 
 /**
- * Created by abimaran on 2/15/16.
+ * This class provides the facility to map the external oauth application with api manager internal oauth application
+ *
  */
+
 public class OauthApplicationRegistrationWorkflowExecutor extends AbstractApplicationRegistrationWorkflowExecutor {
     private static final Log log = LogFactory.getLog(OauthApplicationRegistrationWorkflowExecutor.class);
 
