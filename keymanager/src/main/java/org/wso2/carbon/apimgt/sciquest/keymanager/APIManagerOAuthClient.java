@@ -83,6 +83,8 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
      * This method will Register the client in Authorization Server.
      *
      * @param oauthAppRequest this object holds all parameters required to register an OAuth Client.
+     * @return an {@code  OAuthApplicationInfo} created OAuth Application details in the external OAuth Server
+     * @throws APIManagementException
      */
 
     public OAuthApplicationInfo createApplication(OAuthAppRequest oauthAppRequest) throws APIManagementException {
@@ -95,10 +97,10 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
     /**
      * This method will update an existing OAuth Client.
      *
-     * @param oauthAppRequest Parameters to be passed to Authorization Server,
-     *                        encapsulated as an {@code OAuthAppRequest}
-     * @return Details of updated OAuth Client.
+     * @param oauthAppRequest Parameters to be passed to Authorization Server, encapsulated as an {@code OAuthAppRequest}
+     * @return an {@code  OAuthApplicationInfo} having details of updated OAuth Client.
      * @throws APIManagementException
+     *
      */
 
     public OAuthApplicationInfo updateApplication(OAuthAppRequest oauthAppRequest) throws APIManagementException {
@@ -142,6 +144,14 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
     }
 
+    /**
+     * This method retrieve access token from external OAuth Server
+     *
+     * @param tokenRequest having necessary parameters for token generation in the external OAuth Server
+     * @return an {@code AccessTokenInfo} having newly created access token and it's meta informations
+     * @throws APIManagementException
+     */
+
 
     public AccessTokenInfo getNewApplicationAccessToken(AccessTokenRequest tokenRequest) throws APIManagementException {
 
@@ -149,7 +159,9 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
             return null;
         }
 
-        log.info("Calling OAuth Server for generating Access Token");
+        if (log.isDebugEnabled())   {
+            log.info("Calling OAuth Server for generating Access Token");
+        }
 
         KeyManagerConfiguration config = KeyManagerHolder.getKeyManagerInstance().getKeyManagerConfiguration();
 
@@ -159,6 +171,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
         HttpClient httpClient = new DefaultHttpClient();
 
+        BufferedReader reader = null;
         try {
             String jsonPayload = "grant_type=client_credentials";
 
@@ -176,13 +189,13 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
             if (HttpStatus.SC_OK == responseCode) {
                 HttpEntity entity = response.getEntity();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(entity.getContent(), ClientConstants.UTF_8));
+                reader = new BufferedReader(new InputStreamReader(entity.getContent(), ClientConstants.UTF_8));
                 JSONObject parsedObject = getParsedObjectByReader(reader);
 
                 return getAccessTokenFromResponse(parsedObject);
             } else {
-                handleException("Some thing wrong here while retrieving new token " +
-                                "HTTP Error response code is " + responseCode);
+                handleException("Some thing wrong here while retrieving new token HTTP Error response code is "
+                                + responseCode);
             }
 
         } catch (ClientProtocolException e) {
@@ -191,6 +204,8 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
             handleException("Error has occurred while reading or closing buffer reader. " + e.getMessage(), e);
         } catch (ParseException e)  {
             handleException("Error while parsing response json " + e.getMessage(), e);
+        } finally {
+            IOUtils.closeQuietly(reader);
         }
 
         return null;
@@ -204,6 +219,13 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
     }
 
 
+    /**
+     * This method validates the access token with external OAuth Server
+     *
+     * @param accessToken - the token which need to be validated
+     * @return an {@code AccessTokenInfo} having token validation meta data
+     * @throws APIManagementException
+     */
 
     public AccessTokenInfo getTokenMetaData(String accessToken) throws APIManagementException {
         AccessTokenInfo tokenInfo = new AccessTokenInfo();
