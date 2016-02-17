@@ -33,6 +33,10 @@ public class SciQuestSubscriptionValidationHandler extends AbstractKeyValidation
     @Override
     public boolean validateSubscription(TokenValidationContext validationContext) throws APIKeyMgtException {
 
+        if (log.isDebugEnabled())   {
+            log.debug("By default all the users are subscribed to all the APIs, not validating anything");
+        }
+
         // By default all the users are subscribed to all the APIs, no need to validate
 
         return true;
