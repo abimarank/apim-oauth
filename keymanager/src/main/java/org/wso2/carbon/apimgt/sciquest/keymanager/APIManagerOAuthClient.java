@@ -253,7 +253,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
             int responseCode = response.getStatusLine().getStatusCode();
 
             if (log.isDebugEnabled())   {
-                log.debug("HTTP Response code : " + responseCode);
+                log.debug("HTTP Response code for Token Validation from external OAuth Server: " + responseCode);
             }
 
             // Response Format from OAuth 2 Server
