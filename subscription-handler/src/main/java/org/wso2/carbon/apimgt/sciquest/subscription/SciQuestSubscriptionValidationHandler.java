@@ -5,6 +5,7 @@ import org.wso2.carbon.apimgt.api.model.AccessTokenInfo;
 import org.wso2.carbon.apimgt.impl.APIConstants;
 import org.wso2.carbon.apimgt.impl.dto.APIKeyValidationInfoDTO;
 import org.wso2.carbon.apimgt.impl.factory.KeyManagerHolder;
+import org.wso2.carbon.apimgt.impl.utils.APIMgtDBUtil;
 import org.wso2.carbon.apimgt.impl.utils.APIUtil;
 import org.wso2.carbon.apimgt.keymgt.APIKeyMgtException;
 import org.wso2.carbon.apimgt.keymgt.handlers.AbstractKeyValidationHandler;
@@ -17,6 +18,10 @@ import org.wso2.carbon.identity.oauth2.IdentityOAuth2Exception;
 import org.wso2.carbon.identity.oauth2.model.AccessTokenDO;
 import org.wso2.carbon.identity.oauth2.validators.OAuth2ScopeValidator;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,13 +38,65 @@ public class SciQuestSubscriptionValidationHandler extends AbstractKeyValidation
     @Override
     public boolean validateSubscription(TokenValidationContext validationContext) throws APIKeyMgtException {
 
-        if (log.isDebugEnabled())   {
-            log.debug("By default all the users are subscribed to all the APIs, not validating anything");
+        if (validationContext == null || validationContext.getValidationInfoDTO() == null) {
+            return false;
         }
 
-        // By default all the users are subscribed to all the APIs, no need to validate
+        if (validationContext.isCacheHit()) {
+            return true;
+        }
 
-        return true;
+        APIKeyValidationInfoDTO dto = validationContext.getValidationInfoDTO();
+
+
+        if (validationContext.getTokenInfo() != null) {
+            if (validationContext.getTokenInfo().isApplicationToken()) {
+                dto.setUserType(APIConstants.ACCESS_TOKEN_USER_TYPE_APPLICATION);
+            } else {
+                dto.setUserType("APPLICATION_USER");
+            }
+
+            AccessTokenInfo tokenInfo = validationContext.getTokenInfo();
+
+            // This block checks if a Token of Application Type is trying to access a resource protected with
+            // Application Token
+            if (!hasTokenRequiredAuthLevel(validationContext.getRequiredAuthenticationLevel(), tokenInfo)) {
+                dto.setAuthorized(false);
+                dto.setValidationStatus(APIConstants.KeyValidationStatus.API_AUTH_INCORRECT_ACCESS_TOKEN_TYPE);
+                return false;
+            }
+        }
+
+        boolean state = false;
+
+        try {
+            if (log.isDebugEnabled()) {
+                log.debug("Before validating subscriptions : " + dto);
+                log.debug("Validation Info : { context : " + validationContext.getContext() + " , " +
+                          "version : " + validationContext.getVersion() + " , consumerKey : " + dto.getConsumerKey() + " }");
+            }
+
+            state = validateSubscriptionDetails(validationContext.getContext(),
+                                                validationContext.getVersion(),
+                                                dto.getConsumerKey(), dto);
+            if (state) {
+
+                dto.setAuthorizedDomains(APIUtil.getListOfAuthorizedDomainsByConsumerKey(validationContext
+                                                                                                 .getTokenInfo().getConsumerKey()));
+                checkClientDomainAuthorized(dto, validationContext.getClientDomain());
+            }
+
+
+            if (log.isDebugEnabled()) {
+                log.debug("After validating subscriptions : " + dto);
+            }
+
+
+        } catch (APIManagementException e) {
+            log.error("Error Occurred while validating subscription.", e);
+        }
+
+        return state;
     }
 
     public boolean validateToken(TokenValidationContext validationContext) throws APIKeyMgtException {
@@ -177,6 +234,49 @@ public class SciQuestSubscriptionValidationHandler extends AbstractKeyValidation
             apiKeyValidationInfoDTO.setValidationStatus(APIConstants.KeyValidationStatus.INVALID_SCOPE);
         }
 
+        return false;
+    }
+
+    private boolean validateSubscriptionDetails(String context, String version, String consumerKey,
+                                               APIKeyValidationInfoDTO infoDTO) throws APIManagementException {
+
+        String sql = "SELECT " +
+                     "   APP.APPLICATION_ID," +
+                     "   APP.NAME," +
+                     "   APP.APPLICATION_TIER," +
+                     "   AKM.KEY_TYPE" +
+                     " FROM " +
+                     "   AM_APPLICATION APP," +
+                     "   AM_APPLICATION_KEY_MAPPING AKM" +
+                     " WHERE " +
+                     " AKM.CONSUMER_KEY = ? " +
+                     "   AND AKM.APPLICATION_ID=APP.APPLICATION_ID";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = APIMgtDBUtil.getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, consumerKey);
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                infoDTO.setType(rs.getString("KEY_TYPE"));
+                infoDTO.setApplicationId(rs.getString("APPLICATION_ID"));
+                infoDTO.setApplicationName(rs.getString("NAME"));
+                infoDTO.setApplicationTier(rs.getString("APPLICATION_TIER"));
+                return true;
+            }
+            infoDTO.setAuthorized(false);
+            infoDTO.setValidationStatus(APIConstants.KeyValidationStatus.API_AUTH_RESOURCE_FORBIDDEN);
+
+        } catch (SQLException e) {
+            log.error("Exception occurred while retrieving information from database ", e);
+        }
+        finally {
+            APIMgtDBUtil.closeAllConnections(ps, conn, rs);
+        }
         return false;
     }
 }
