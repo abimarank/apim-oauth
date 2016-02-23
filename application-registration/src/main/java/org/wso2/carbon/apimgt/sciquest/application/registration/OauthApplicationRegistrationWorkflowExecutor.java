@@ -53,14 +53,12 @@ public class OauthApplicationRegistrationWorkflowExecutor extends AbstractApplic
             log.info("Complete  Application Registration Workflow..");
         }
 
-        ApplicationRegistrationWorkflowDTO regWFDTO = (ApplicationRegistrationWorkflowDTO) workFlowDTO;
-
-
         ApiMgtDAO dao = new ApiMgtDAO();
 
         try {
             dao.createApplicationRegistrationEntry((ApplicationRegistrationWorkflowDTO) workFlowDTO, false);
-            //generateKeysForApplication(regWFDTO);
+            // Skipping Token Generation.
+
         } catch (APIManagementException e) {
             String msg = "Error occured when updating the status of the Application creation process";
             log.error(msg, e);
