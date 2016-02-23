@@ -1,12 +1,9 @@
 package org.wso2.carbon.apimgt.sciquest.jwt.claims;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.apimgt.api.APIManagementException;
 import org.wso2.carbon.apimgt.impl.dto.APIKeyValidationInfoDTO;
 import org.wso2.carbon.apimgt.impl.token.AbstractJWTGenerator;
 import org.wso2.carbon.apimgt.impl.token.ClaimsRetriever;
-import org.wso2.carbon.apimgt.impl.token.JWTGenerator;
 import org.wso2.carbon.apimgt.impl.utils.APIUtil;
 
 import java.util.Calendar;
@@ -16,7 +13,6 @@ import java.util.Map;
 
 
 public class CustomJWTGenerator extends AbstractJWTGenerator {
-    private static final Log log = LogFactory.getLog(CustomJWTGenerator.class);
     @Override
     public Map<String, String> populateStandardClaims(APIKeyValidationInfoDTO keyValidationInfoDTO, String apiContext,
                                                       String version) throws APIManagementException {
@@ -24,14 +20,11 @@ public class CustomJWTGenerator extends AbstractJWTGenerator {
         long currentTime = Calendar.getInstance().getTimeInMillis();
         long expireIn = currentTime + 1000 * 60 * getTTL();
 
-        //String jwtBody = "";
         String dialect;
         ClaimsRetriever claimsRetriever = getClaimsRetriever();
         if (claimsRetriever != null) {
-            //jwtBody = JWT_INITIAL_BODY.replaceAll("\\[0\\]", claimsRetriever.getDialectURI(endUserName));
             dialect = claimsRetriever.getDialectURI(keyValidationInfoDTO.getEndUserName());
         } else {
-            //jwtBody = JWT_INITIAL_BODY.replaceAll("\\[0\\]", dialectURI);
             dialect = getDialectURI();
         }
 
