@@ -287,9 +287,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
                 //pass bufferReader object  and get read it and retrieve  the parsedJson object
                 parsedObject = getParsedObjectByReader(reader);
                 if (parsedObject != null) {
-
-                    Map valueMap = parsedObject;
-                    Object principal = valueMap.get("principal");
+                    Object principal = parsedObject.get("principal");
 
                     if (principal == null) {
                         tokenInfo.setTokenValid(false);
@@ -297,7 +295,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
                     }
                     Map principalMap = (Map) principal;
                     String clientId = (String) principalMap.get("name");
-                    Long expiryTimeString = (Long) valueMap.get("expires_in");
+                    Long expiryTimeString = (Long) parsedObject.get("expires_in");
 
                     // Returning false if mandatory attributes are missing.
                     if (clientId == null || expiryTimeString == null) {
@@ -314,7 +312,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
                         tokenInfo.setValidityPeriod(expiryTime - currentTime);
                         // Considering Current Time as the issued time.
                         tokenInfo.setIssuedTime(currentTime);
-                        JSONArray scopesArray = (JSONArray) valueMap.get("scopes");
+                        JSONArray scopesArray = (JSONArray) parsedObject.get("scopes");
 
                         if (scopesArray != null && !scopesArray.isEmpty()) {
 
@@ -324,9 +322,17 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
                             }
                             tokenInfo.setScope(scopes);
                         }
+
+                        JSONObject jso = new JSONObject();
+                        jso.putAll(principalMap);
+                        tokenInfo.setEndUserName(jso.toString());
+
+                        if (log.isDebugEnabled())   {
+                            log.debug("Token Response Principle : " + jso.toJSONString());
+                        }
                     } else {
                         tokenInfo.setTokenValid(false);
-                        tokenInfo.setErrorcode(APIConstants.KeyValidationStatus.API_AUTH_ACCESS_TOKEN_INACTIVE);
+                        tokenInfo.setErrorcode(APIConstants.KeyValidationStatus.API_AUTH_ACCESS_TOKEN_EXPIRED);
                         return tokenInfo;
                     }
 
