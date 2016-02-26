@@ -32,7 +32,6 @@
     <modules>
         <module>keymanager</module>
         <module>application-registration</module>
-        <module>subscription-handler</module>
         <module>jwt-custom-claims</module>
     </modules>
 
