@@ -160,7 +160,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
         }
 
         if (log.isDebugEnabled())   {
-            log.info("Calling OAuth Server for generating Access Token");
+            log.debug("Calling OAuth Server for generating Access Token");
         }
 
         KeyManagerConfiguration config = KeyManagerHolder.getKeyManagerInstance().getKeyManagerConfiguration();
@@ -388,7 +388,9 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
     public OAuthApplicationInfo mapOAuthApplication(OAuthAppRequest appInfoRequest)
             throws APIManagementException {
 
-        log.info("Client OAuth application creation not supported in OAuth Server");
+        if (log.isDebugEnabled())   {
+            log.debug("Client OAuth application creation not supported in OAuth Server");
+        }
 
         OAuthApplicationInfo oAuthApplicationInfo = appInfoRequest.getOAuthApplicationInfo();
         return oAuthApplicationInfo;
