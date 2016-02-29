@@ -33,7 +33,7 @@
     <artifactId>oauth-app-registration</artifactId>
     <version>1.0.0</version>
     <packaging>bundle</packaging>
-    <name>Client code for using Surf OAuth as the Authorization Server</name>
+    <name>Client code for creating APIM internal OAuth application</name>
 
     <dependencies>
         <dependency>
