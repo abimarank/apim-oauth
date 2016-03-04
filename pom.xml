@@ -33,6 +33,7 @@
         <module>keymanager</module>
         <module>application-registration</module>
         <module>jwt-custom-claims</module>
+        <module>environment-resolver</module>
     </modules>
 
     <properties>
@@ -63,16 +64,6 @@
                 <version>1.1.1</version>
             </dependency>
             <dependency>
-                <groupId>org.wso2.carbon.identity</groupId>
-                <artifactId>org.wso2.carbon.identity.oauth</artifactId>
-                <version>${identity.component.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.carbon.apimgt</groupId>
-                <artifactId>org.wso2.carbon.apimgt.keymgt</artifactId>
-                <version>${apim.component.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.wso2.carbon.apimgt</groupId>
                 <artifactId>org.wso2.carbon.apimgt.impl</artifactId>
                 <version>${apim.component.version}</version>
@@ -81,6 +72,11 @@
                 <groupId>org.wso2.carbon.apimgt</groupId>
                 <artifactId>org.wso2.carbon.apimgt.api</artifactId>
                 <version>${apim.component.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.synapse</groupId>
+                <artifactId>synapse-core</artifactId>
+                <version>2.1.5-wso2v2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
