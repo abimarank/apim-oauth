@@ -34,6 +34,7 @@
         <module>application-registration</module>
         <module>jwt-custom-claims</module>
         <module>environment-resolver</module>
+        <module>APIBulkExport</module>
     </modules>
 
     <properties>
@@ -48,35 +49,70 @@
                 <artifactId>json-simple</artifactId>
                 <version>1.1</version>
             </dependency>
+
             <dependency>
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
                 <version>2.6</version>
             </dependency>
+
             <dependency>
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
                 <version>2.1</version>
             </dependency>
+
             <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
                 <version>1.1.1</version>
             </dependency>
+
             <dependency>
                 <groupId>org.wso2.carbon.apimgt</groupId>
                 <artifactId>org.wso2.carbon.apimgt.impl</artifactId>
                 <version>${apim.component.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.wso2.carbon.apimgt</groupId>
                 <artifactId>org.wso2.carbon.apimgt.api</artifactId>
                 <version>${apim.component.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.apache.synapse</groupId>
                 <artifactId>synapse-core</artifactId>
                 <version>2.1.5-wso2v2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>18.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.googlecode.json-simple.wso2</groupId>
+                <artifactId>json-simple</artifactId>
+                <version>1.1.wso2v1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-codec.wso2</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>1.4.0.wso2v1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.5.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpmime</artifactId>
+                <version>4.5.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
