@@ -34,7 +34,7 @@
         <module>application-registration</module>
         <module>jwt-custom-claims</module>
         <module>environment-resolver</module>
-        <module>APIBulkExport</module>
+        <module>api-bulk-export-import</module>
     </modules>
 
     <properties>
