@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -227,6 +228,7 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
 
     public AccessTokenInfo getTokenMetaData(String accessToken) throws APIManagementException {
         AccessTokenInfo tokenInfo = new AccessTokenInfo();
+        tokenInfo.setAccessToken(accessToken);
 
         KeyManagerConfiguration config = KeyManagerHolder.getKeyManagerInstance().getKeyManagerConfiguration();
 
@@ -311,6 +313,20 @@ public class APIManagerOAuthClient extends AbstractKeyManager {
                         // Considering Current Time as the issued time.
                         tokenInfo.setIssuedTime(currentTime);
                         JSONArray scopesArray = (JSONArray) parsedObject.get("scopes");
+
+                        if (log.isDebugEnabled())   {
+                            StringBuilder tokens = new StringBuilder("[");
+                            Iterator iterator = scopesArray.iterator();
+                            while (iterator.hasNext())  {
+                                tokens.append(iterator.next());
+                                if (iterator.hasNext()) {
+                                    tokens.append(", ");
+                                }
+                            }
+                            tokens.append("]");
+
+                            log.debug("Tokens " + tokens);
+                        }
 
                         if (scopesArray != null && !scopesArray.isEmpty()) {
 
